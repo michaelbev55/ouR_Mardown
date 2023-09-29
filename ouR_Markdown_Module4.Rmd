@@ -18,7 +18,7 @@ This will be shown by comparing the mean snout-vent lengths and the mean total h
 <br>
 <br>
 <center>
-[![An anolis lizard](https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Green_anole.jpg/320px-Green_anole.jpg)](https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Green_anole.jpg/320px-Green_anole.jpg)
+![An Anolis lizard](https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Anole_-_Dactyloidae.jpg/640px-Anole_-_Dactyloidae.jpg)
 </center>
 <br>
 <br>
@@ -38,13 +38,13 @@ library(geiger) #for eco analysis
 library(knitr) #for knitting options
 ```
 
-```{r, "load the data"}
+```{r, "load the data",message=FALSE}
 anole <- read_csv("anole.dat.csv")
 anole.eco <- read_csv("anole.eco.csv")
 anole.tree <- read.tree("anole.tre")
 ```
 
-```{r, "join, filter, mutate to log"}
+```{r, "join, filter, mutate to log",message=FALSE}
 anole2 <- anole%>%
 left_join(anole.eco)%>%
   filter(!Ecomorph%in%c("U","CH"))%>%
@@ -55,7 +55,7 @@ anole.log <- anole2%>%
 ```
 
 
-```{r, "PGLS models"}
+```{r, "PGLS models",message=FALSE}
 ### phylogenetic GLS models
 
 #PGLS under BM, no ecomorph
@@ -71,29 +71,29 @@ pgls.OU1 <- gls(HTotal ~SVL, correlation = corMartins(0,phy = anole.tree,form=~S
 pgls.OU2 <- gls(HTotal ~SVL * Ecomorph2, correlation = corMartins(0,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
 ```
 
-```{r, "AIC"}
+```{r, "AIC",message=FALSE}
 #AIC operations
 anole.phylo.aic <- AICc(pgls.BM1,pgls.BM2,pgls.OU1,pgls.OU2)
 anole.phylow.aicw <- aicw(anole.phylo.aic$AICc)
 ```
 
-```{r, "AIC Kable"}
+```{r, "AIC Kable",message=FALSE}
 anole.phylo.aic %>% 
   kable(caption = "Table of AICs")
 ```
 
-```{r, "add residuals"}
+```{r, "add residuals",message=FALSE}
 #add phylo-corrected residuals
 anole.log <- anole.log%>%
   mutate(phylo.res=residuals(pgls.BM2))
 ```
 
-```{r, "regression plot", fig.cap="Regression plot of log-transformed HTotal vs SVL"}
+```{r, "regression plot", fig.cap="Regression plot of log-transformed HTotal vs SVL",message=FALSE}
 anole.log%>%
-  ggplot(aes(HTotal,SVL,col=Ecomorph2))+geom_point()+geom_smooth(method="lm")
+  ggplot(aes(SVL,HTotal,col=Ecomorph2))+geom_point()+geom_smooth(method="lm")
 ```
 
-```{r,"plot residuals", fig.cap="Boxplot of phylogenetically corrected hindlimb residuals versus anole ecomorph"}
+```{r,"plot residuals", fig.cap="Boxplot of phylogenetically corrected hindlimb residuals versus anole ecomorph",message=FALSE}
 #plot residuals
 p.eco.phylo <- anole.log%>%
 ggplot(aes(x=Ecomorph2,y=phylo.res)) +geom_boxplot() +stat_summary(fun=mean, geom="point", size=3)
