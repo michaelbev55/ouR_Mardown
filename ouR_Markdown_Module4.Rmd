@@ -103,12 +103,14 @@ print(p.eco.phylo)
 
 ```
 
-After assessing the fit of each of the four phylogenetic models, the best fitting of the four models is the Brownian motion model with ecomorphology as a factor. 
+After assessing the fit of each of the four phylogenetic models, the `pgls.BM2` model produced the lowest AIC score, indicating a better fit to the data compared to the other models. This model included ecomorphology as an influencing factor in the hindlimb-SVL relationship based on evolution through Brownian motion.
 
 ## Discussion
+By determining which of the four models best fits the *Anolis* data, it can be seen that the hindlimb-SVL relationship can best be described by a model that includes ecomorphology and operates under Brownian motion. This suggests that these traits of hindlimb and SVL evolved randomly, but also that they evolved randomly within each lineage (since ecomorphology was an influencing factor).
 
 ## Author Contributions
 Michael Bevilacqua: Created the repository, and wrote the code for questions #1, #3-#7
+<br>
 Audrey Berger: Wrote the information and found correct source for #2 and #8, checked other questions with own code to compare
 
 ## References
