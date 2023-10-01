@@ -1,0 +1,83 @@
+---
+title: "Project 4"
+author: "ouR_Markdown"
+date: "2023-09-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ape)
+library(nlme)
+library(MuMIn)
+library(geiger)
+library(knitr)
+```
+
+# Introduction
+
+<center> ![An *Anolis* Lizard](https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Anolis_cuvieri_image_2.jpg/1599px-Anolis_cuvieri_image_2.jpg?20130906043543) </center>
+# Methods
+
+# Results
+
+```{r, "load the data", include=FALSE}
+anole <- read_csv("anole.dat.csv")
+anole.eco <- read_csv("anole.eco.csv")
+anole.tree <- read.tree("anole.tre")
+```
+
+```{r, "join, filter, mutate to log", include=FALSE}
+anole2 <- anole%>%
+  left_join(anole.eco)%>%
+  filter(!Ecomorph%in%c("U", "CH"))%>%
+  na.omit()
+
+anole.log <- anole2%>%
+  mutate_at(c("SVL", "HTotal", "PH", "ArbPD"),log)
+```
+
+```{r, "PGLS models", include=FALSE}
+#PGLS under BM, no ecomorph
+pgls.BM1 <- gls(HTotal ~SVL, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+
+#PGLS under BM, w ecomorph
+pgls.BM2 <- gls(HTotal ~SVL * Ecomorph2, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+
+#PGLS under OU, no ecomorph
+pgls.OU1 <- gls(HTotal ~SVL, correlation = corMartins(0,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+
+#PGLS under OU, w, ecomorph
+pgls.OU2 <- gls(HTotal ~SVL * Ecomorph2, correlation = corMartins(0,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+```
+
+```{r, "AIC", echo=FALSE, message=FALSE}
+anole.phylo.aic <- AICc(pgls.BM1, pgls.BM2, pgls.OU1, pgls.OU2)
+anole.phylo.aicw <- aicw(anole.phylo.aic$AICc)
+rownames(anole.phylo.aicw) <- c("pgls.BM1", "pgls.BM2", "pgls.OU1", "pgls.OU2")
+kable(anole.phylo.aicw,
+      caption="AIC Values to Compare Phylogenetic Models to Data")
+```
+
+```{r, "add residuals", include=FALSE}
+anole.log <- anole.log%>%
+  mutate(phylo.res=residuals(pgls.BM2))
+```
+
+```{r, "regression plot", fig.cap="Regression plot of log-transformed HTotal vs SVL", echo=FALSE, message=FALSE}
+anole.log%>%
+  ggplot(aes(HTotal,SVL, col=Ecomorph2)) + geom_point() + geom_abline()
+```
+
+```{r, "plot residuals", fig.cap="Boxplot of phylogenetically corrected hindlimb residuals versus anole ecomorph", echo=FALSE, message=FALSE}
+p.eco.phylo <- anole.log%>%
+  ggplot(aes(x=Ecomorph2, y=phylo.res))+geom_boxplot() +stat_summary(fun=mean, geom="point", size=3)
+#the fig.cap gives a specified caption to a generated figure
+```
+
+# Discussion
+
+# Author Contributions
+
+# References
