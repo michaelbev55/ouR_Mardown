@@ -16,7 +16,7 @@ library(knitr)
 ```
 
 # Introduction
-
+The anoles, belonging to genus *anolis* are a diverse collection of iguanian reptiles, consisting of more than 400 different species
 <center> ![An *Anolis* Lizard](https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Anolis_cuvieri_image_2.jpg/1599px-Anolis_cuvieri_image_2.jpg?20130906043543) </center>
 # Methods
 
