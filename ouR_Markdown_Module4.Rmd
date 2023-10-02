@@ -113,6 +113,6 @@ Michael Bevilacqua: Created the repository, and wrote the code for questions #1,
 <br>
 Audrey Berger: Wrote the information and found correct source for #2 and #8, checked other questions with own code to compare
 <br>
-Susanne Hahs: Checked, edited, and compared code, wrote/edited writing 
+Susanne Hahs: Checked, edited, and compared code, as well as edited writing 
 
 ## References
