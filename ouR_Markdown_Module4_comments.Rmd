@@ -1,0 +1,134 @@
+---
+title: "Project 4"
+author: "ouR_Markdown"
+date: "2023-09-25"
+output: html_document
+bibliography: Project4.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<!-- for comments -->
+<style>
+div.comment pre { background-color:#ffbbbb; }
+div.comment pre.r { background-color:#ffbbbb; }
+div.comment {color: red;}
+</style>
+
+
+## Introduction
+The main question that this study aims to target is to depict the morphological and allometric differences between eco-morphs of the genus *Anolis*.
+This will be shown by comparing the mean snout-vent lengths and the mean total hind-limb lengths of varying eco-morphs, and determining if the perch height (the height of the perch in a tree, where the anole lives) and diameter (width of said perch) have any impact on the discrete patterns in the hindlimb-SVL relationship [@hagey2017there].
+
+<center>
+![An Anolis lizard](https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Anole_-_Dactyloidae.jpg/640px-Anole_-_Dactyloidae.jpg)
+</center>
+
+
+## Methods
+To investigate the morphological and allometric variations within the Anolis species, we employed two datasets: one containing morphological measurements and the other containing microhabitat data. These datasets included measurements of species from both Queensland, Australia, and the Caribbean. To facilitate analysis, we combined and logarithmically transformed the provided species data. Subsequently, we created four phylogenetic generalized least squares models using Brownian and Ornstein-Uhlenbeck motion modeling.
+
+Brownian motion modeling assumes that trait values change randomly in both direction and distance over any time interval. This implies that the evolution of traits involves a substantial random component, accounting for the potential for traits to evolve differently in various circumstances [@harmon2019phylogenetic]. In contrast, Ornstein-Uhlenbeck motion modeling suggests that evolution occurs under stabilizing selection, guiding traits towards an optimal state [@harmon2019phylogenetic].
+
+Following the development of these models, we assessed the goodness of fit for each model using information theory. This analysis helped us determine which model provided the best fit for the variation observed in hind-limb traits.
+
+## Results
+
+```{r,include=FALSE}
+library(tidyverse) #always
+library(ape) #for evo analysis
+library(nlme) #ditto
+library(MuMIn) #for AIC
+library(geiger) #for eco analysis
+library(knitr) #for knitting options
+```
+
+<div class="comment">
+prolly best to put this in the "setup" chunk.
+</div>
+
+```{r, "load the data",message=FALSE}
+anole <- read_csv("anole.dat.csv")
+anole.eco <- read_csv("anole.eco.csv")
+anole.tree <- read.tree("anole.tre")
+```
+
+```{r, "join, filter, mutate to log",message=FALSE}
+anole2 <- anole%>%
+left_join(anole.eco)%>%
+  filter(!Ecomorph%in%c("U","CH"))%>%
+  na.omit()
+
+anole.log <- anole2%>%
+  mutate_at(c("SVL", "HTotal","PH","ArbPD"),log)
+```
+
+
+```{r, "PGLS models",message=FALSE}
+### phylogenetic GLS models
+
+#PGLS under BM, no ecomorph
+pgls.BM1 <- gls(HTotal ~SVL, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+
+#PGLS under BM, w ecomorph
+pgls.BM2 <- gls(HTotal ~SVL * Ecomorph2, correlation = corBrownian(1,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+
+#PGLS under OU, no ecomorph
+pgls.OU1 <- gls(HTotal ~SVL, correlation = corMartins(0,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+
+#PGLS under OU, w, ecomorph
+pgls.OU2 <- gls(HTotal ~SVL * Ecomorph2, correlation = corMartins(0,phy = anole.tree,form=~Species),data = anole.log, method = "ML")
+```
+
+```{r, "AIC",message=FALSE}
+#AIC operations
+anole.phylo.aic <- AICc(pgls.BM1,pgls.BM2,pgls.OU1,pgls.OU2)
+anole.phylow.aicw <- aicw(anole.phylo.aic$AICc)
+```
+
+```{r, "AIC Kable",message=FALSE}
+anole.phylo.aic %>% 
+  kable(caption = "Table of AICs")
+```
+
+```{r, "add residuals",message=FALSE}
+#add phylo-corrected residuals
+anole.log <- anole.log%>%
+  mutate(phylo.res=residuals(pgls.BM2))
+```
+
+```{r, "regression plot", fig.cap="Regression plot of log-transformed HTotal vs SVL",message=FALSE}
+anole.log%>%
+  ggplot(aes(SVL,HTotal,col=Ecomorph2))+geom_point()+geom_smooth(method="lm")
+```
+
+```{r,"plot residuals", fig.cap="Boxplot of phylogenetically corrected hindlimb residuals versus anole ecomorph",message=FALSE}
+#plot residuals
+p.eco.phylo <- anole.log%>%
+ggplot(aes(x=Ecomorph2,y=phylo.res)) +geom_boxplot() +stat_summary(fun=mean, geom="point", size=3)
+
+print(p.eco.phylo)
+
+```
+
+Following a thorough evaluation of the suitability of the four phylogenetic models, it was observed that the pgls.BM2 model exhibited the lowest AIC score. This signifies that it demonstrated a superior fit to the data when compared to the other models. Within this particular model, ecomorphology was considered as a contributing factor influencing the relationship between hindlimb and SVL, with its effects explained by the process of evolution through Brownian motion.
+
+## Discussion
+By identifying the most suitable model among the four options for describing the *Anolis* data, we find that the relationship between hindlimb and SVL is best characterized by a model incorporating ecomorphology and adhering to Brownian motion. This implies that the evolution of these traits, hindlimb and SVL, follows a random pattern. Moreover, the inclusion of ecomorphology as a factor indicates that this random evolution occurs independently within each lineage, further highlighting the role of stochastic processes in shaping these traits. 
+
+## Author Contributions
+Michael Bevilacqua: Created the repository, and wrote the code for questions #1, #3-#7
+<br>
+Audrey Berger: Wrote the information and found correct source for #2 and #8, checked other questions with own code to compare
+<br>
+Susanne Hahs: Checked, edited, and compared code, as well as edited writing 
+
+## References
+
+<div class="comment">
+Nice work, especially considering this was your first crack at something like this!
+
+Total points: 20
+</div>
